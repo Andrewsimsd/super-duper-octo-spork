@@ -13,6 +13,31 @@
         state: present
         update_cache: true
 
+    - name: Install additional development and lab tools
+      apt:
+        name:
+          - fzf
+          - linux-tools-common
+          - linux-tools-generic
+          - memtester
+          - stress-ng
+          - e2fsprogs
+          - gnupg2
+          - gpg-agent
+          - scdaemon
+          - nginx
+          - avahi-utils
+          - nmap
+          - netdata
+          - ethtool
+        state: present
+        update_cache: true
+
+    - name: Ensure universe repository is enabled
+      apt_repository:
+        repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
+        state: present
+
     - name: Ensure snapd is installed
       apt:
         name: snapd
@@ -157,6 +182,19 @@
       args:
         executable: /bin/bash
         creates: "/home/{{ ansible_user }}/.cargo/bin/cargo-nextest"
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+    - name: Install cargo-crev
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        /home/{{ ansible_user }}/.cargo/bin/cargo install --locked cargo-crev
+      args:
+        executable: /bin/bash
+        creates: "/home/{{ ansible_user }}/.cargo/bin/cargo-crev"
       environment:
         HOME: "/home/{{ ansible_user }}"
         USER: "{{ ansible_user }}"
