@@ -49,6 +49,14 @@ cd ~/dev-machines
 ```
 An existing workspace is included in this repository.
 
+## 2a) Directory purpose and usage
+
+Ansible projects commonly organize content into the following directories:
+
+- `inventory/`: defines target hosts and groups (for example, `hosts.ini`) that playbooks run against. See the Ansible inventory documentation for supported formats and conventions: https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html
+- `playbooks/`: contains YAML playbooks that describe the desired state of the target machines. See the playbook documentation for structure and execution details: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html
+- `roles/`: a reusable packaging format for tasks, handlers, templates, and defaults. This repository currently does **not** use roles, but the directory exists so you can adopt roles later as the playbooks grow. See the roles documentation for the standard layout and how to apply them in playbooks: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html
+
 ## 3) Verify the controller installation
 
 Check that Ansible is installed and available in your PATH:
