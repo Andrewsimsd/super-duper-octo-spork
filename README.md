@@ -104,13 +104,13 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -C "dev-machines"
 Copy the public key to the target (prompts once for the remote password):
 
 ```bash
-ssh-copy-id administrator@192.168.1.90
+ssh-copy-id targetusername@192.168.0.1
 ```
 
 If the default command fails, explicitly provide the public key path:
 
 ```bash
-ssh-copy-id -i ~/.ssh/id_ed25519.pub administrator@192.168.1.90
+ssh-copy-id -i ~/.ssh/id_ed25519.pub targetusername@192.168.0.1
 ```
 
 ## 6) Test connectivity
@@ -126,5 +126,5 @@ ansible -i inventory/hosts.ini dev -m ping
 Execute a playbook against your inventory. `--ask-become-pass` prompts for sudo access on the targets:
 
 ```bash
-ansible-playbook -i inventory/hosts.ini playbooks/cryptsetup.yml --ask-become-pass
+ansible-playbook -i inventory/hosts.ini playbooks/install_base_packages.yml --ask-become-pass
 ```
