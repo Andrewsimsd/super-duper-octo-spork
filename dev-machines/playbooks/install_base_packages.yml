@@ -1,0 +1,258 @@
+---
+- name: Install base packages on dev machines
+  hosts: dev
+  become: true
+
+  tasks:
+    - name: Ensure base packages are installed
+      apt:
+        name:
+          - cryptsetup
+          - git
+          - gparted
+        state: present
+        update_cache: true
+
+    - name: Ensure snapd is installed
+      apt:
+        name: snapd
+        state: present
+        update_cache: true
+
+    - name: Ensure snapd service is enabled and running
+      systemd:
+        name: snapd
+        enabled: true
+        state: started
+
+    - name: Install VS Code via snap (classic confinement)
+      community.general.snap:
+        name: code
+        classic: true
+        state: present
+
+    # --- Rust development environment ---
+
+    # --- Rust (rustup + cargo) development environment ---
+
+    - name: Install Rust system dependencies
+      apt:
+        name:
+          - build-essential
+          - pkg-config
+          - libssl-dev
+          - curl
+          - ca-certificates
+        state: present
+        update_cache: true
+
+    # (Optional) clean up a common failure mode where rustup got installed as root
+    - name: Remove accidental root rustup install (optional)
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /root/.cargo
+        - /root/.rustup
+
+    - name: Install rustup (and thus cargo) for the login user
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        curl -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile default
+      args:
+        executable: /bin/bash
+        creates: "/home/{{ ansible_user }}/.cargo/bin/rustup"
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+    - name: Install stable toolchain + set default
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        /home/{{ ansible_user }}/.cargo/bin/rustup toolchain install stable
+        /home/{{ ansible_user }}/.cargo/bin/rustup default stable
+      args:
+        executable: /bin/bash
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+    - name: Add clippy and rustfmt components
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        /home/{{ ansible_user }}/.cargo/bin/rustup component add clippy rustfmt
+      args:
+        executable: /bin/bash
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+    - name: Ensure cargo is on PATH for bash (interactive shells)
+      become: true
+      become_user: "{{ ansible_user }}"
+      lineinfile:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        line: 'export PATH="$HOME/.cargo/bin:$PATH"'
+        create: true
+        state: present
+
+    - name: Ensure user environment.d directory exists (for GUI PATH)
+      become: true
+      become_user: "{{ ansible_user }}"
+      file:
+        path: "/home/{{ ansible_user }}/.config/environment.d"
+        state: directory
+        mode: "0755"
+
+
+    - name: Ensure cargo is on PATH for GUI apps too (VS Code launched from desktop)
+      become: true
+      become_user: "{{ ansible_user }}"
+      copy:
+        dest: "/home/{{ ansible_user }}/.config/environment.d/10-cargo.conf"
+        content: |
+          PATH=$HOME/.cargo/bin:$PATH
+        mode: "0644"
+
+        # --- Extra cargo tools ---
+
+    - name: Install cargo-deny
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        /home/{{ ansible_user }}/.cargo/bin/cargo install --locked cargo-deny
+      args:
+        executable: /bin/bash
+        creates: "/home/{{ ansible_user }}/.cargo/bin/cargo-deny"
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+    - name: Install cargo-audit
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        /home/{{ ansible_user }}/.cargo/bin/cargo install --locked cargo-audit
+      args:
+        executable: /bin/bash
+        creates: "/home/{{ ansible_user }}/.cargo/bin/cargo-audit"
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+    - name: Install cargo-nextest
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        /home/{{ ansible_user }}/.cargo/bin/cargo install --locked cargo-nextest
+      args:
+        executable: /bin/bash
+        creates: "/home/{{ ansible_user }}/.cargo/bin/cargo-nextest"
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+        # --- Embedded ARMv7 hard-float toolchain + utilities ---
+
+    - name: Install embedded/cross development packages (ARMv7hf)
+      apt:
+        name:
+          # Cross compiler toolchain (glibc Linux target)
+          - gcc-arm-linux-gnueabihf
+          - g++-arm-linux-gnueabihf
+
+          # Debugging & binary inspection
+          - gdb
+          - gdb-multiarch
+          - binutils-arm-linux-gnueabihf
+
+          # Build system + speedups
+          - cmake
+          - ninja-build
+          - ccache
+          - pkg-config
+
+          # Helpful runtime/diagnostics tools
+          - rsync
+          - openssh-client
+          - curl
+          - ca-certificates
+          - file
+          - jq
+          - strace
+          - ltrace
+
+          # Serial console / embedded bring-up
+          - picocom
+
+          # Optional but often useful for embedded Linux work
+          - device-tree-compiler
+        state: present
+        update_cache: true
+
+        # --- Rust cross target for ARMv7hf ---
+
+    - name: Add Rust ARMv7hf target
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        /home/{{ ansible_user }}/.cargo/bin/rustup target add armv7-unknown-linux-gnueabihf
+      args:
+        executable: /bin/bash
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+    - name: Ensure ~/.cargo directory exists
+      become: true
+      become_user: "{{ ansible_user }}"
+      file:
+        path: "/home/{{ ansible_user }}/.cargo"
+        state: directory
+        mode: "0755"
+
+    - name: Configure Cargo linker for ARMv7hf
+      become: true
+      become_user: "{{ ansible_user }}"
+      copy:
+        dest: "/home/{{ ansible_user }}/.cargo/config.toml"
+        mode: "0644"
+        content: |
+          [target.armv7-unknown-linux-gnueabihf]
+          linker = "arm-linux-gnueabihf-gcc"
+
+          # Optional: speeds up iterative builds
+          # [build]
+          # rustc-wrapper = "ccache"
+
+          # --- Clang / LLVM toolchain ---
+
+    - name: Install clang / LLVM toolchain
+      apt:
+        name:
+          - clang
+          - clangd
+          - llvm
+          - lldb
+          - lld
+          - llvm-dev
+          - libclang-dev
+        state: present
+        update_cache: true
+
+
+
+
+
+
+
