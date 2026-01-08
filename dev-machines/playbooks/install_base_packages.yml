@@ -1,4 +1,6 @@
 ---
+# Playbook format reference: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html
+# YAML formatting tips for Ansible: https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
 - name: Install base packages on dev machines
   hosts: dev
   become: true
@@ -34,6 +36,7 @@
         update_cache: true
 
     - name: Ensure universe repository is enabled
+      # Enables access to community-maintained packages that aren't in the main repo.
       apt_repository:
         repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
         state: present
@@ -45,12 +48,14 @@
         update_cache: true
 
     - name: Ensure snapd service is enabled and running
+      # Some snaps expect the daemon to be active even if installed by apt.
       systemd:
         name: snapd
         enabled: true
         state: started
 
     - name: Install VS Code via snap (classic confinement)
+      # Classic confinement is required for VS Code's filesystem access.
       community.general.snap:
         name: code
         classic: true
@@ -73,6 +78,7 @@
 
     # (Optional) clean up a common failure mode where rustup got installed as root
     - name: Remove accidental root rustup install (optional)
+      # Rust tooling should be installed per-user; this avoids root-owned toolchains.
       file:
         path: "{{ item }}"
         state: absent
@@ -119,6 +125,7 @@
         USER: "{{ ansible_user }}"
 
     - name: Ensure cargo is on PATH for bash (interactive shells)
+      # Adds cargo to PATH in interactive shells for CLI usage.
       become: true
       become_user: "{{ ansible_user }}"
       lineinfile:
@@ -128,6 +135,7 @@
         state: present
 
     - name: Ensure user environment.d directory exists (for GUI PATH)
+      # Systemd environment.d is used for GUI apps launched from desktop sessions.
       become: true
       become_user: "{{ ansible_user }}"
       file:
@@ -137,6 +145,7 @@
 
 
     - name: Ensure cargo is on PATH for GUI apps too (VS Code launched from desktop)
+      # Ensures GUI apps like VS Code can find cargo without a login shell.
       become: true
       become_user: "{{ ansible_user }}"
       copy:
@@ -287,7 +296,6 @@
           - libclang-dev
         state: present
         update_cache: true
-
 
 
 
