@@ -47,6 +47,7 @@ Move into the workspace so relative paths in commands below are consistent:
 ```bash
 cd ~/dev-machines
 ```
+An existing workspace is included in this repository.
 
 ## 3) Verify the controller installation
 
@@ -78,7 +79,7 @@ Enable and start the SSH service immediately:
 sudo systemctl enable --now ssh
 ```
 
-Install networking tools (useful for basic troubleshooting):
+Install networking tools (useful for obtaining the IP address via ifconfig is leasing through DHCP):
 
 ```bash
 sudo apt install -y net-tools
