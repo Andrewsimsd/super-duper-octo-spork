@@ -28,12 +28,32 @@
           - gpg-agent
           - scdaemon
           - nginx
+          - avahi-daemon
           - avahi-utils
+          - libnss-mdns
           - nmap
           - netdata
           - ethtool
+          - putty
         state: present
         update_cache: true
+
+    - name: Set system hostname to inventory name (for mDNS .local)
+      hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: Ensure avahi-daemon is enabled and running
+      systemd:
+        name: avahi-daemon
+        enabled: true
+        state: started
+
+    - name: Ensure mDNS is enabled in NSS configuration
+      replace:
+        path: /etc/nsswitch.conf
+        regexp: '^(hosts:\s+)(.*)$'
+        replace: '\1mdns4_minimal [NOTFOUND=return] \2'
+      when: "'mdns4_minimal' not in lookup('file', '/etc/nsswitch.conf')"
 
     - name: Ensure universe repository is enabled
       # Enables access to community-maintained packages that aren't in the main repo.
@@ -296,8 +316,6 @@
           - libclang-dev
         state: present
         update_cache: true
-
-
 
 
 
