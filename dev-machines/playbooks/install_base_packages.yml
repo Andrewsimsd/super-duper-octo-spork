@@ -41,6 +41,16 @@
     - name: Set system hostname to inventory name (for mDNS .local)
       hostname:
         name: "{{ inventory_hostname }}"
+      notify: Restart avahi-daemon
+
+    - name: Ensure default shell aliases are set system-wide
+      copy:
+        dest: /etc/profile.d/aliases.sh
+        content: |
+          alias ls='ls --color=auto'
+        owner: root
+        group: root
+        mode: "0644"
 
     - name: Ensure avahi-daemon is enabled and running
       systemd:
@@ -51,9 +61,10 @@
     - name: Ensure mDNS is enabled in NSS configuration
       replace:
         path: /etc/nsswitch.conf
-        regexp: '^(hosts:\s+)(.*)$'
-        replace: '\1mdns4_minimal [NOTFOUND=return] \2'
+        regexp: '^(hosts:\s+)(files)(.*)$'
+        replace: '\1\2 mdns4_minimal [NOTFOUND=return]\3'
       when: "'mdns4_minimal' not in lookup('file', '/etc/nsswitch.conf')"
+      notify: Restart avahi-daemon
 
     - name: Ensure universe repository is enabled
       # Enables access to community-maintained packages that aren't in the main repo.
@@ -228,7 +239,7 @@
         HOME: "/home/{{ ansible_user }}"
         USER: "{{ ansible_user }}"
 
-        # --- Embedded ARMv7 hard-float toolchain + utilities ---
+    # --- Embedded ARMv7 hard-float toolchain + utilities ---
 
     - name: Install embedded/cross development packages (ARMv7hf)
       apt:
@@ -317,6 +328,8 @@
         state: present
         update_cache: true
 
-
-
-
+  handlers:
+    - name: Restart avahi-daemon
+      systemd:
+        name: avahi-daemon
+        state: restarted
