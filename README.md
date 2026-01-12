@@ -74,6 +74,7 @@ Ansible projects commonly organize content into the following directories:
     ├── playbooks/
     │   └── install_base_packages.yml
     └── roles/
+        ├── common/
         ├── general_tools/
         ├── software_development/
         ├── user_settings/
@@ -159,6 +160,7 @@ ansible-playbook -i inventory/hosts.ini playbooks/install_base_packages.yml --as
 
 ## 9) Role overview
 
+- `common`: shared defaults used across other roles (user paths, Vivado version, toolchain paths).
 - `user_settings`: hostname, shell defaults, GNOME preferences, and Firefox policies.
 - `general_tools`: baseline packages, mDNS (avahi), snapd, and common utilities.
 - `software_development`: Rust toolchain, Python tooling, and embedded development packages.
