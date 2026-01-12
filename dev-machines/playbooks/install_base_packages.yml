@@ -62,6 +62,16 @@
         group: root
         mode: "0755"
 
+    - name: Ensure system dconf profile includes local database
+      copy:
+        dest: /etc/dconf/profile/user
+        content: |
+          user-db:user
+          system-db:local
+        owner: root
+        group: root
+        mode: "0644"
+
     - name: Ensure GNOME default favorites and dark mode are set
       copy:
         dest: /etc/dconf/db/local.d/00-gnome-settings
