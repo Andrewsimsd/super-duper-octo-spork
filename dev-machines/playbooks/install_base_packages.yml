@@ -175,6 +175,19 @@
         headers:
           User-Agent: "Mozilla/5.0 (X11; Linux x86_64)"
 
+    - name: Install archive extraction dependencies
+      apt:
+        name:
+          - tar
+          - xz-utils
+        state: present
+        update_cache: true
+
+    - name: Extract ARM GNU toolchain archive
+      command: tar -xf /usr/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz -C /usr
+      args:
+        creates: /usr/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf
+
     - name: Install VS Code via snap (classic confinement)
       # Classic confinement is required for VS Code's filesystem access.
       community.general.snap:
