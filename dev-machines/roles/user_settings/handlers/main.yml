@@ -1,5 +1,8 @@
 ---
 - name: Restart avahi-daemon
-  systemd:
+  ansible.builtin.systemd:
     name: avahi-daemon
     state: restarted
+
+- name: Update dconf database
+  ansible.builtin.command: dconf update

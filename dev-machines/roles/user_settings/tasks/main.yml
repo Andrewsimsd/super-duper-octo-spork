@@ -1,11 +1,11 @@
 ---
 - name: Set system hostname to inventory name (for mDNS .local)
-  hostname:
+  ansible.builtin.hostname:
     name: "{{ inventory_hostname }}"
   notify: Restart avahi-daemon
 
 - name: Ensure default shell aliases are set system-wide
-  copy:
+  ansible.builtin.copy:
     dest: /etc/profile.d/aliases.sh
     content: |
       alias ls='ls --color=auto'
@@ -14,7 +14,7 @@
     mode: "0644"
 
 - name: Enforce 15-minute shell inactivity logout
-  copy:
+  ansible.builtin.copy:
     dest: /etc/profile.d/idle-timeout.sh
     content: |
       TMOUT=900
@@ -25,7 +25,7 @@
     mode: "0644"
 
 - name: Ensure dconf local database directory exists
-  file:
+  ansible.builtin.file:
     path: /etc/dconf/db/local.d
     state: directory
     owner: root
@@ -33,7 +33,7 @@
     mode: "0755"
 
 - name: Ensure system dconf profile includes local database
-  copy:
+  ansible.builtin.copy:
     dest: /etc/dconf/profile/user
     content: |
       user-db:user
@@ -41,9 +41,10 @@
     owner: root
     group: root
     mode: "0644"
+  notify: Update dconf database
 
 - name: Ensure GNOME default dark mode is set
-  copy:
+  ansible.builtin.copy:
     dest: /etc/dconf/db/local.d/00-gnome-settings
     content: |
       [org/gnome/desktop/interface]
@@ -51,24 +52,22 @@
     owner: root
     group: root
     mode: "0644"
-
-- name: Update dconf database
-  command: dconf update
+  notify: Update dconf database
 
 - name: Apply GNOME dark mode for login user
-  become: true
-  become_user: "{{ ansible_user }}"
-  shell: |
+  ansible.builtin.shell: |
     set -e
     dbus-run-session -- gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
   args:
     executable: /bin/bash
+  become: true
+  become_user: "{{ dev_user }}"
   environment:
-    HOME: "/home/{{ ansible_user }}"
-    USER: "{{ ansible_user }}"
+    HOME: "{{ dev_home }}"
+    USER: "{{ dev_user }}"
 
 - name: Ensure Firefox policies directory exists
-  file:
+  ansible.builtin.file:
     path: /etc/firefox/policies
     state: directory
     owner: root
@@ -76,7 +75,7 @@
     mode: "0755"
 
 - name: Configure Firefox bookmark for router page
-  copy:
+  ansible.builtin.copy:
     dest: /etc/firefox/policies/policies.json
     content: |
       {
