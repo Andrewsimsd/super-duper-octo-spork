@@ -10,6 +10,7 @@
       apt:
         name:
           - cryptsetup
+          - dconf-cli
           - git
           - gparted
         state: present
@@ -34,6 +35,7 @@
           - nmap
           - netdata
           - ethtool
+          - meld
           - putty
         state: present
         update_cache: true
@@ -48,6 +50,51 @@
         dest: /etc/profile.d/aliases.sh
         content: |
           alias ls='ls --color=auto'
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Ensure GNOME default favorites and dark mode are set
+      copy:
+        dest: /etc/dconf/db/local.d/00-gnome-settings
+        content: |
+          [org/gnome/shell]
+          favorite-apps=['code_code.desktop', 'org.gnome.Calculator.desktop', 'meld.desktop', 'org.gnome.Nautilus.desktop', 'firefox.desktop']
+
+          [org/gnome/desktop/interface]
+          color-scheme='prefer-dark'
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Update dconf database
+      command: dconf update
+
+    - name: Ensure Firefox policies directory exists
+      file:
+        path: /etc/firefox/policies
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Configure Firefox bookmark for router page
+      copy:
+        dest: /etc/firefox/policies/policies.json
+        content: |
+          {
+            "policies": {
+              "ManagedBookmarks": [
+                {
+                  "toplevel_name": "Managed Bookmarks"
+                },
+                {
+                  "name": "Router",
+                  "url": "http://192.168.1.1"
+                }
+              ]
+            }
+          }
         owner: root
         group: root
         mode: "0644"
