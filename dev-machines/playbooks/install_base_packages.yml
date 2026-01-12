@@ -215,6 +215,8 @@
         path: "/home/{{ ansible_user }}/Documents/repositories"
         state: directory
         mode: "0755"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
       become: true
 
     - name: Clone Digilent Vivado boards repository
@@ -225,7 +227,7 @@
       register: vivado_boards_clone
       retries: 3
       delay: 10
-      until: vivado_boards_clone is succeeded
+      until: vivado_boards_clone.rc == 0
       failed_when: false
       become: true
       become_user: "{{ ansible_user }}"
@@ -245,7 +247,7 @@
         mode: "0755"
 
     - name: Move Vivado board files into Xilinx data directory
-      when: vivado_boards_clone is succeeded
+      when: vivado_boards_clone.rc == 0
       become: true
       command: >
         mv /home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files
