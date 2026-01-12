@@ -28,10 +28,10 @@ Install Ansible itself:
 sudo apt install -y ansible
 ```
 
-Install the `ansible.posix` collection (includes common POSIX modules used in playbooks):
+Install required collections (matches `requirements.yml` in this repo):
 
 ```bash
-ansible-galaxy collection install ansible.posix
+ansible-galaxy collection install -r dev-machines/requirements.yml
 ```
 
 ## 2) Create your Ansible workspace
@@ -47,6 +47,7 @@ Move into the workspace so relative paths in commands below are consistent:
 ```bash
 cd ~/dev-machines
 ```
+
 An existing workspace is included in this repository.
 
 ## 2a) Directory purpose and usage
@@ -55,7 +56,30 @@ Ansible projects commonly organize content into the following directories:
 
 - `inventory/`: defines target hosts and groups (for example, `hosts.ini`) that playbooks run against. See the Ansible inventory documentation for supported formats and conventions: https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html
 - `playbooks/`: contains YAML playbooks that describe the desired state of the target machines. See the playbook documentation for structure and execution details: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html
-- `roles/`: a reusable packaging format for tasks, handlers, templates, and defaults. This repository currently does **not** use roles, but the directory exists so you can adopt roles later as the playbooks grow. See the roles documentation for the standard layout and how to apply them in playbooks: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html
+- `roles/`: a reusable packaging format for tasks, handlers, templates, and defaults. Roles are used in this repo to keep responsibilities isolated and repeatable. See the roles documentation for the standard layout and how to apply them in playbooks: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html
+- `group_vars/`: group-level variables for consistent configuration across hosts. See the variable precedence documentation for details: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
+
+## 2b) Project layout (repository)
+
+```
+.
+├── README.md
+└── dev-machines/
+    ├── ansible.cfg
+    ├── requirements.yml
+    ├── inventory/
+    │   └── hosts.ini
+    ├── group_vars/
+    │   └── all.yml
+    ├── playbooks/
+    │   └── install_base_packages.yml
+    └── roles/
+        ├── common/
+        ├── general_tools/
+        ├── software_development/
+        ├── user_settings/
+        └── vivado/
+```
 
 ## 3) Verify the controller installation
 
@@ -113,7 +137,12 @@ If the default command fails, explicitly provide the public key path:
 ssh-copy-id -i ~/.ssh/id_ed25519.pub targetusername@192.168.0.1
 ```
 
-## 6) Test connectivity
+## 6) Configure inventory and variables
+
+- Update `dev-machines/inventory/hosts.ini` with the correct hostnames, IPs, and `ansible_user` values.
+- Review `dev-machines/group_vars/all.yml` to adjust defaults (paths, Vivado version, etc.).
+
+## 7) Test connectivity
 
 Use Ansible’s built-in `ping` module to verify inventory connectivity:
 
@@ -121,10 +150,28 @@ Use Ansible’s built-in `ping` module to verify inventory connectivity:
 ansible -i inventory/hosts.ini dev -m ping
 ```
 
-## 7) Run a playbook
+## 8) Run a playbook
 
 Execute a playbook against your inventory. `--ask-become-pass` prompts for sudo access on the targets:
 
 ```bash
 ansible-playbook -i inventory/hosts.ini playbooks/install_base_packages.yml --ask-become-pass
+```
+
+## 9) Role overview
+
+- `common`: shared defaults used across other roles (user paths, Vivado version, toolchain paths).
+- `user_settings`: hostname, shell defaults, GNOME preferences, and Firefox policies.
+- `general_tools`: baseline packages, mDNS (avahi), snapd, and common utilities.
+- `software_development`: Rust toolchain, Python tooling, and embedded development packages.
+- `vivado`: Vivado dependencies and Digilent board files.
+
+## 10) Linting (optional but recommended)
+
+If you want to keep the project aligned with Ansible best practices, install ansible-lint and run it from the `dev-machines` directory:
+
+```bash
+python3 -m pip install --user ansible-lint
+cd dev-machines
+ansible-lint
 ```

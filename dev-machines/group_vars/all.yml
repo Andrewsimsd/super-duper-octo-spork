@@ -1,0 +1,17 @@
+---
+# Global variables for dev machine provisioning.
+# Override per-host or per-group in inventory if needed.
+
+dev_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+dev_home: "/home/{{ dev_user }}"
+repos_dir: "{{ dev_home }}/Documents/repositories"
+
+vivado_version: "2023.1"
+vivado_tools_dir: "/tools/Xilinx/Vivado/{{ vivado_version }}"
+vivado_boards_repo: "https://github.com/Digilent/vivado-boards.git"
+vivado_boards_dest: "{{ repos_dir }}/vivado-boards"
+vivado_boards_source_dir: "{{ vivado_boards_dest }}/new/board_files"
+
+cargo_home: "{{ dev_home }}/.cargo"
+rustup_bin: "{{ cargo_home }}/bin/rustup"
+cargo_bin: "{{ cargo_home }}/bin/cargo"

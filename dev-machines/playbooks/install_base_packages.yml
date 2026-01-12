@@ -6,6 +6,7 @@
   become: true
 
   roles:
+    - role: common
     - role: user_settings
     - role: general_tools
     - role: software_development

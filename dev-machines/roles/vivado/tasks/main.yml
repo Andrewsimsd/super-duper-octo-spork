@@ -1,6 +1,6 @@
 ---
 - name: Install Vivado runtime dependencies
-  apt:
+  ansible.builtin.apt:
     name:
       # Required for Vivado install
       - libtinfo5
@@ -11,18 +11,18 @@
     update_cache: true
 
 - name: Ensure Vivado repositories directory exists
-  file:
-    path: "/home/{{ ansible_user }}/Documents/repositories"
+  ansible.builtin.file:
+    path: "{{ repos_dir }}"
     state: directory
     mode: "0755"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
   become: true
 
 - name: Clone Digilent Vivado boards repository
-  git:
-    repo: "https://github.com/Digilent/vivado-boards.git"
-    dest: "/home/{{ ansible_user }}/Documents/repositories/vivado-boards"
+  ansible.builtin.git:
+    repo: "{{ vivado_boards_repo }}"
+    dest: "{{ vivado_boards_dest }}"
     version: master
   register: vivado_boards_clone
   retries: 3
@@ -30,26 +30,26 @@
   until: vivado_boards_clone is succeeded
   failed_when: false
   become: true
-  become_user: "{{ ansible_user }}"
+  become_user: "{{ dev_user }}"
 
 - name: Warn when Vivado boards repository could not be cloned
   when: vivado_boards_clone is failed
-  debug:
+  ansible.builtin.debug:
     msg: >
-      Failed to clone https://github.com/Digilent/vivado-boards.git.
+      Failed to clone {{ vivado_boards_repo }}.
       Check network access and rerun this play if you need board files installed.
 
 - name: Ensure Vivado boards data directory exists
   become: true
-  file:
-    path: "/tools/Xilinx/Vivado/2023.1/data/boards"
+  ansible.builtin.file:
+    path: "{{ vivado_tools_dir }}/data/boards"
     state: directory
     mode: "0755"
 
 - name: Check for Vivado board files directory
   become: true
-  stat:
-    path: "/home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files"
+  ansible.builtin.stat:
+    path: "{{ vivado_boards_source_dir }}"
   register: vivado_board_files
 
 - name: Copy Vivado board files into Xilinx data directory
@@ -57,11 +57,15 @@
     - vivado_boards_clone is succeeded
     - vivado_board_files.stat.exists
   become: true
-  copy:
-    src: "/home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files"
-    dest: "/tools/Xilinx/Vivado/2023.1/data/boards"
+  ansible.builtin.copy:
+    src: "{{ vivado_boards_source_dir }}"
+    dest: "{{ vivado_tools_dir }}/data/boards"
     remote_src: true
 
 - name: Ensure /tools is owned by the login user
   become: true
-  command: "sudo chown -R {{ ansible_user }}:{{ ansible_user }} /tools"
+  ansible.builtin.file:
+    path: /tools
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    recurse: true

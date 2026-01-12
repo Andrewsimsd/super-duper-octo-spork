@@ -1,6 +1,6 @@
 ---
 - name: Ensure base packages are installed
-  apt:
+  ansible.builtin.apt:
     name:
       - cryptsetup
       - dconf-cli
@@ -10,7 +10,7 @@
     update_cache: true
 
 - name: Install additional development and lab tools
-  apt:
+  ansible.builtin.apt:
     name:
       - fzf
       - linux-tools-common
@@ -34,13 +34,13 @@
     update_cache: true
 
 - name: Ensure avahi-daemon is enabled and running
-  systemd:
+  ansible.builtin.systemd:
     name: avahi-daemon
     enabled: true
     state: started
 
 - name: Ensure mDNS is enabled in NSS configuration
-  replace:
+  ansible.builtin.replace:
     path: /etc/nsswitch.conf
     regexp: '^(hosts:\s+)(files)(.*)$'
     replace: '\1\2 mdns4_minimal [NOTFOUND=return]\3'
@@ -49,31 +49,31 @@
 
 - name: Ensure universe repository is enabled
   # Enables access to community-maintained packages that aren't in the main repo.
-  apt_repository:
+  ansible.builtin.apt_repository:
     repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
     state: present
 
 - name: Ensure snapd is installed
-  apt:
+  ansible.builtin.apt:
     name: snapd
     state: present
     update_cache: true
 
 - name: Ensure snapd service is enabled and running
   # Some snaps expect the daemon to be active even if installed by apt.
-  systemd:
+  ansible.builtin.systemd:
     name: snapd
     enabled: true
     state: started
 
 - name: Ensure file utility is installed for archive validation
-  apt:
+  ansible.builtin.apt:
     name: file
     state: present
     update_cache: true
 
 - name: Download ARM GNU toolchain archive
-  get_url:
+  ansible.builtin.get_url:
     url: "https://developer.arm.com/-/media/files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz?rev=9929cb6c0e8948f0ba1a621167fcd56d&revision=9929cb6c-0e89-48f0-ba1a-621167fcd56d&hash=5A35322DCE6807D58839B96C03A183DA"
     dest: /usr/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz
     mode: "0644"
