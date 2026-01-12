@@ -46,12 +46,21 @@
     state: directory
     mode: "0755"
 
-- name: Copy Vivado board files into Xilinx data directory
-  when: vivado_boards_clone is succeeded
+- name: Check for Vivado board files directory
   become: true
-  command: >
-    cp -r /home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files
-    /tools/Xilinx/Vivado/2023.1/data/boards
+  stat:
+    path: "/home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files"
+  register: vivado_board_files
+
+- name: Copy Vivado board files into Xilinx data directory
+  when:
+    - vivado_boards_clone is succeeded
+    - vivado_board_files.stat.exists
+  become: true
+  copy:
+    src: "/home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files"
+    dest: "/tools/Xilinx/Vivado/2023.1/data/boards"
+    remote_src: true
 
 - name: Ensure /tools is owned by the login user
   become: true
