@@ -72,13 +72,10 @@
         group: root
         mode: "0644"
 
-    - name: Ensure GNOME default favorites and dark mode are set
+    - name: Ensure GNOME default dark mode is set
       copy:
         dest: /etc/dconf/db/local.d/00-gnome-settings
         content: |
-          [org/gnome/shell]
-          favorite-apps=['code_code.desktop', 'org.gnome.Calculator.desktop', 'meld.desktop', 'org.gnome.Nautilus.desktop', 'firefox.desktop', 'org.gnome.Terminal.desktop']
-
           [org/gnome/desktop/interface]
           color-scheme='prefer-dark'
         owner: root
@@ -88,12 +85,11 @@
     - name: Update dconf database
       command: dconf update
 
-    - name: Apply GNOME favorites and dark mode for login user
+    - name: Apply GNOME dark mode for login user
       become: true
       become_user: "{{ ansible_user }}"
       shell: |
         set -e
-        dbus-run-session -- gsettings set org.gnome.shell favorite-apps "['code_code.desktop', 'org.gnome.Calculator.desktop', 'meld.desktop', 'org.gnome.Nautilus.desktop', 'firefox.desktop', 'org.gnome.Terminal.desktop']"
         dbus-run-session -- gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
       args:
         executable: /bin/bash
@@ -183,6 +179,14 @@
           - libssl-dev
           - curl
           - ca-certificates
+        state: present
+        update_cache: true
+
+    # --- Vivado dependencies ---
+
+    - name: Install Vivado runtime dependencies
+      apt:
+        name:
           # Required for Vivado install
           - libtinfo5
           # Required for Vivado install
