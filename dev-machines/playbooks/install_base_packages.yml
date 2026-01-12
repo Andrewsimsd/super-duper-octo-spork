@@ -227,7 +227,7 @@
       register: vivado_boards_clone
       retries: 3
       delay: 10
-      until: vivado_boards_clone.rc == 0
+      until: vivado_boards_clone is succeeded
       failed_when: false
       become: true
       become_user: "{{ ansible_user }}"
@@ -247,7 +247,7 @@
         mode: "0755"
 
     - name: Move Vivado board files into Xilinx data directory
-      when: vivado_boards_clone.rc == 0
+      when: vivado_boards_clone is succeeded
       become: true
       command: >
         mv /home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files
