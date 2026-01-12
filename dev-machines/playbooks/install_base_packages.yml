@@ -210,6 +210,34 @@
         state: present
         update_cache: true
 
+    - name: Ensure Vivado repositories directory exists
+      file:
+        path: "/home/{{ ansible_user }}/Documents/repositories"
+        state: directory
+        mode: "0755"
+      become: true
+
+    - name: Clone Digilent Vivado boards repository
+      git:
+        repo: "https://github.com/Digilent/vivado-boards.git"
+        dest: "/home/{{ ansible_user }}/Documents/repositories/vivado-boards"
+        version: master
+      become: true
+      become_user: "{{ ansible_user }}"
+
+    - name: Ensure Vivado boards data directory exists
+      become: true
+      file:
+        path: "/tools/Xilinx/Vivado/2023.1/data/boards"
+        state: directory
+        mode: "0755"
+
+    - name: Move Vivado board files into Xilinx data directory
+      become: true
+      command: >
+        mv /home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files
+        /tools/Xilinx/Vivado/2023.1/data/boards
+
     - name: Ensure /tools is owned by the login user
       become: true
       command: "sudo chown -R {{ ansible_user }}:{{ ansible_user }} /tools"
