@@ -10,6 +10,7 @@
       apt:
         name:
           - cryptsetup
+          - dconf-cli
           - git
           - gparted
         state: present
@@ -34,6 +35,7 @@
           - nmap
           - netdata
           - ethtool
+          - meld
           - putty
         state: present
         update_cache: true
@@ -48,6 +50,79 @@
         dest: /etc/profile.d/aliases.sh
         content: |
           alias ls='ls --color=auto'
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Ensure dconf local database directory exists
+      file:
+        path: /etc/dconf/db/local.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Ensure system dconf profile includes local database
+      copy:
+        dest: /etc/dconf/profile/user
+        content: |
+          user-db:user
+          system-db:local
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Ensure GNOME default dark mode is set
+      copy:
+        dest: /etc/dconf/db/local.d/00-gnome-settings
+        content: |
+          [org/gnome/desktop/interface]
+          color-scheme='prefer-dark'
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Update dconf database
+      command: dconf update
+
+    - name: Apply GNOME dark mode for login user
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        dbus-run-session -- gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+      args:
+        executable: /bin/bash
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
+    - name: Ensure Firefox policies directory exists
+      file:
+        path: /etc/firefox/policies
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Configure Firefox bookmark for router page
+      copy:
+        dest: /etc/firefox/policies/policies.json
+        content: |
+          {
+            "policies": {
+              "ManagedBookmarks": [
+                {
+                  "toplevel_name": "Managed Bookmarks"
+                },
+                {
+                  "name": "Router",
+                  "url": "http://192.168.1.1",
+                  "placement": "toolbar"
+                }
+              ]
+            }
+          }
         owner: root
         group: root
         mode: "0644"
@@ -85,6 +160,21 @@
         enabled: true
         state: started
 
+    - name: Ensure file utility is installed for archive validation
+      apt:
+        name: file
+        state: present
+        update_cache: true
+
+    - name: Download ARM GNU toolchain archive
+      get_url:
+        url: "https://developer.arm.com/-/media/files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz?rev=9929cb6c0e8948f0ba1a621167fcd56d&revision=9929cb6c-0e89-48f0-ba1a-621167fcd56d&hash=5A35322DCE6807D58839B96C03A183DA"
+        dest: /usr/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz
+        mode: "0644"
+        force: false
+        headers:
+          User-Agent: "Mozilla/5.0 (X11; Linux x86_64)"
+
     - name: Install VS Code via snap (classic confinement)
       # Classic confinement is required for VS Code's filesystem access.
       community.general.snap:
@@ -104,6 +194,18 @@
           - libssl-dev
           - curl
           - ca-certificates
+        state: present
+        update_cache: true
+
+    # --- Vivado dependencies ---
+
+    - name: Install Vivado runtime dependencies
+      apt:
+        name:
+          # Required for Vivado install
+          - libtinfo5
+          # Required for Vivado install
+          - libncurses5-dev
         state: present
         update_cache: true
 
