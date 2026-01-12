@@ -54,6 +54,17 @@
         group: root
         mode: "0644"
 
+    - name: Enforce 15-minute shell inactivity logout
+      copy:
+        dest: /etc/profile.d/idle-timeout.sh
+        content: |
+          TMOUT=900
+          readonly TMOUT
+          export TMOUT
+        owner: root
+        group: root
+        mode: "0644"
+
     - name: Ensure dconf local database directory exists
       file:
         path: /etc/dconf/db/local.d
