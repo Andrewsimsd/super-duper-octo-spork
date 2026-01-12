@@ -222,8 +222,20 @@
         repo: "https://github.com/Digilent/vivado-boards.git"
         dest: "/home/{{ ansible_user }}/Documents/repositories/vivado-boards"
         version: master
+      register: vivado_boards_clone
+      retries: 3
+      delay: 10
+      until: vivado_boards_clone is succeeded
+      failed_when: false
       become: true
       become_user: "{{ ansible_user }}"
+
+    - name: Warn when Vivado boards repository could not be cloned
+      when: vivado_boards_clone is failed
+      debug:
+        msg: >
+          Failed to clone https://github.com/Digilent/vivado-boards.git.
+          Check network access and rerun this play if you need board files installed.
 
     - name: Ensure Vivado boards data directory exists
       become: true
@@ -233,6 +245,7 @@
         mode: "0755"
 
     - name: Move Vivado board files into Xilinx data directory
+      when: vivado_boards_clone is succeeded
       become: true
       command: >
         mv /home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files
