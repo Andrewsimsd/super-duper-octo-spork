@@ -206,8 +206,13 @@
           - libtinfo5
           # Required for Vivado install
           - libncurses5-dev
+          - gawk
         state: present
         update_cache: true
+
+    - name: Ensure /tools is owned by the login user
+      become: true
+      command: "sudo chown -R {{ ansible_user }}:{{ ansible_user }} /tools"
 
     # (Optional) clean up a common failure mode where rustup got installed as root
     - name: Remove accidental root rustup install (optional)
