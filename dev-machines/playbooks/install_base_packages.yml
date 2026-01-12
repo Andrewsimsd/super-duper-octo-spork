@@ -183,6 +183,10 @@
           - libssl-dev
           - curl
           - ca-certificates
+          # Required for Vivado install
+          - libtinfo5
+          # Required for Vivado install
+          - libncurses5-dev
         state: present
         update_cache: true
 
