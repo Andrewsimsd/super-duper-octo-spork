@@ -88,6 +88,19 @@
     - name: Update dconf database
       command: dconf update
 
+    - name: Apply GNOME favorites and dark mode for login user
+      become: true
+      become_user: "{{ ansible_user }}"
+      shell: |
+        set -e
+        dbus-run-session -- gsettings set org.gnome.shell favorite-apps "['code_code.desktop', 'org.gnome.Calculator.desktop', 'meld.desktop', 'org.gnome.Nautilus.desktop', 'firefox.desktop']"
+        dbus-run-session -- gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+      args:
+        executable: /bin/bash
+      environment:
+        HOME: "/home/{{ ansible_user }}"
+        USER: "{{ ansible_user }}"
+
     - name: Ensure Firefox policies directory exists
       file:
         path: /etc/firefox/policies
@@ -108,7 +121,8 @@
                 },
                 {
                   "name": "Router",
-                  "url": "http://192.168.1.1"
+                  "url": "http://192.168.1.1",
+                  "placement": "toolbar"
                 }
               ]
             }
