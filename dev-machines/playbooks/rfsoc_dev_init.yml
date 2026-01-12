@@ -1,8 +1,8 @@
 ---
 # Playbook format reference: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html
 # YAML formatting tips for Ansible: https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
-- name: Install base packages on dev machines
-  hosts: dev
+- name: Install base packages on rfsoc dev machines
+  hosts: rfsocdev
   become: true
 
   roles:
