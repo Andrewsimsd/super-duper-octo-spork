@@ -1,0 +1,13 @@
+---
+vscode_extensions:
+  - vadimcn.vscode-lldb
+  - rust-lang.rust-analyzer
+  - formulahendry.code-runner
+  - streetsidesoftware.code-spell-checker
+  - fill-labs.dependi
+  - github.vscode-github-actions
+  - ms-python.vscode-pylance
+  - ms-python.python
+  - ms-python.debugpy
+  - ms-python.vscode-python-envs
+  - mechatroner.rainbow-csv

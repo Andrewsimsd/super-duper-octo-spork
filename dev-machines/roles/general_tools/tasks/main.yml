@@ -87,3 +87,14 @@
     name: code
     classic: true
     state: present
+
+- name: Install VS Code extensions
+  ansible.builtin.command: "code --install-extension {{ item }} --force"
+  register: vscode_extension_install
+  changed_when: "'already installed' not in vscode_extension_install.stdout"
+  loop: "{{ vscode_extensions }}"
+  become: true
+  become_user: "{{ dev_user }}"
+  environment:
+    HOME: "{{ dev_home }}"
+    USER: "{{ dev_user }}"
