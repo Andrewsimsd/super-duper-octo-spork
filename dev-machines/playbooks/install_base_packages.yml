@@ -165,6 +165,14 @@
         url: "https://developer.arm.com/-/media/files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz?rev=9929cb6c0e8948f0ba1a621167fcd56d&revision=9929cb6c-0e89-48f0-ba1a-621167fcd56d&hash=5A35322DCE6807D58839B96C03A183DA"
         dest: /usr/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz
         mode: "0644"
+        force: false
+
+    - name: Extract ARM GNU toolchain archive
+      unarchive:
+        src: /usr/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz
+        dest: /usr
+        remote_src: true
+        creates: /usr/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-linux-gnueabihf
 
     - name: Install VS Code via snap (classic confinement)
       # Classic confinement is required for VS Code's filesystem access.
