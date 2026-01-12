@@ -1,0 +1,58 @@
+---
+- name: Install Vivado runtime dependencies
+  apt:
+    name:
+      # Required for Vivado install
+      - libtinfo5
+      # Required for Vivado install
+      - libncurses5-dev
+      - gawk
+    state: present
+    update_cache: true
+
+- name: Ensure Vivado repositories directory exists
+  file:
+    path: "/home/{{ ansible_user }}/Documents/repositories"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: true
+
+- name: Clone Digilent Vivado boards repository
+  git:
+    repo: "https://github.com/Digilent/vivado-boards.git"
+    dest: "/home/{{ ansible_user }}/Documents/repositories/vivado-boards"
+    version: master
+  register: vivado_boards_clone
+  retries: 3
+  delay: 10
+  until: vivado_boards_clone is succeeded
+  failed_when: false
+  become: true
+  become_user: "{{ ansible_user }}"
+
+- name: Warn when Vivado boards repository could not be cloned
+  when: vivado_boards_clone is failed
+  debug:
+    msg: >
+      Failed to clone https://github.com/Digilent/vivado-boards.git.
+      Check network access and rerun this play if you need board files installed.
+
+- name: Ensure Vivado boards data directory exists
+  become: true
+  file:
+    path: "/tools/Xilinx/Vivado/2023.1/data/boards"
+    state: directory
+    mode: "0755"
+
+- name: Copy Vivado board files into Xilinx data directory
+  when: vivado_boards_clone is succeeded
+  become: true
+  command: >
+    cp -r /home/{{ ansible_user }}/Documents/repositories/vivado-boards/new/board_files
+    /tools/Xilinx/Vivado/2023.1/data/boards
+
+- name: Ensure /tools is owned by the login user
+  become: true
+  command: "sudo chown -R {{ ansible_user }}:{{ ansible_user }} /tools"

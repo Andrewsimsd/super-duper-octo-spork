@@ -1,0 +1,98 @@
+---
+- name: Set system hostname to inventory name (for mDNS .local)
+  hostname:
+    name: "{{ inventory_hostname }}"
+  notify: Restart avahi-daemon
+
+- name: Ensure default shell aliases are set system-wide
+  copy:
+    dest: /etc/profile.d/aliases.sh
+    content: |
+      alias ls='ls --color=auto'
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enforce 15-minute shell inactivity logout
+  copy:
+    dest: /etc/profile.d/idle-timeout.sh
+    content: |
+      TMOUT=900
+      readonly TMOUT
+      export TMOUT
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure dconf local database directory exists
+  file:
+    path: /etc/dconf/db/local.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure system dconf profile includes local database
+  copy:
+    dest: /etc/dconf/profile/user
+    content: |
+      user-db:user
+      system-db:local
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure GNOME default dark mode is set
+  copy:
+    dest: /etc/dconf/db/local.d/00-gnome-settings
+    content: |
+      [org/gnome/desktop/interface]
+      color-scheme='prefer-dark'
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Update dconf database
+  command: dconf update
+
+- name: Apply GNOME dark mode for login user
+  become: true
+  become_user: "{{ ansible_user }}"
+  shell: |
+    set -e
+    dbus-run-session -- gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+  args:
+    executable: /bin/bash
+  environment:
+    HOME: "/home/{{ ansible_user }}"
+    USER: "{{ ansible_user }}"
+
+- name: Ensure Firefox policies directory exists
+  file:
+    path: /etc/firefox/policies
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure Firefox bookmark for router page
+  copy:
+    dest: /etc/firefox/policies/policies.json
+    content: |
+      {
+        "policies": {
+          "ManagedBookmarks": [
+            {
+              "toplevel_name": "Managed Bookmarks"
+            },
+            {
+              "name": "Router",
+              "url": "http://192.168.1.1",
+              "placement": "toolbar"
+            }
+          ]
+        }
+      }
+    owner: root
+    group: root
+    mode: "0644"
