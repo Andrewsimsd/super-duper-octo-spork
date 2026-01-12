@@ -54,6 +54,14 @@
         group: root
         mode: "0644"
 
+    - name: Ensure dconf local database directory exists
+      file:
+        path: /etc/dconf/db/local.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
     - name: Ensure GNOME default favorites and dark mode are set
       copy:
         dest: /etc/dconf/db/local.d/00-gnome-settings
