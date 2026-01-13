@@ -75,8 +75,15 @@
     group: "{{ dev_user }}"
     recurse: true
 
-- name: Ensure Vivado role sets default shell to bash
+- name: Ensure dash is not the default /bin/sh shell
   become: true
-  ansible.builtin.user:
-    name: "{{ dev_user }}"
-    shell: /bin/bash
+  ansible.builtin.debconf:
+    name: dash
+    question: dash/sh
+    value: "false"
+    vtype: boolean
+
+- name: Reconfigure default /bin/sh shell to bash
+  become: true
+  ansible.builtin.command: dpkg-reconfigure -f noninteractive dash
+  changed_when: false
