@@ -1,12 +1,17 @@
 ---
-- name: Install Vivado runtime dependencies
+- name: Install Vivado and petalinux installer dependencies
   ansible.builtin.apt:
     name:
       # Required for Vivado install
       - libtinfo5
-      # Required for Vivado install
       - libncurses5-dev
+      # Required for Petalinux install
       - gawk
+      - xterm
+      - autoconf
+      - libtool
+      - texinfo
+      - gcc-multilib
     state: present
     update_cache: true
 
