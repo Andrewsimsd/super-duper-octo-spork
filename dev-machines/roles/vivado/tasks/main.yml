@@ -74,3 +74,9 @@
     owner: "{{ dev_user }}"
     group: "{{ dev_user }}"
     recurse: true
+
+- name: Ensure Vivado role sets default shell to bash
+  become: true
+  ansible.builtin.user:
+    name: "{{ dev_user }}"
+    shell: /bin/bash
