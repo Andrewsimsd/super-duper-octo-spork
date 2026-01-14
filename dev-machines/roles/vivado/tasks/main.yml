@@ -12,6 +12,9 @@
       - libtool
       - texinfo
       - gcc-multilib
+      - kconfig
+      - kconfig-tweak
+      - bootgen
     state: present
     update_cache: true
 
