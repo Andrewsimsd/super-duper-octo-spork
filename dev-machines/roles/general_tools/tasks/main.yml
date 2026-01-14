@@ -6,6 +6,7 @@
       - dconf-cli
       - git
       - gparted
+      - tree
     state: present
     update_cache: true
 
