@@ -9,5 +9,6 @@
     - role: common
     - role: user_settings
     - role: general_tools
+    - role: kde
     - role: software_development
     - role: vivado
