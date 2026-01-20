@@ -1,0 +1,7 @@
+---
+- name: Install KDE desktop environment
+  ansible.builtin.apt:
+    name:
+      - kde-full
+    state: present
+    update_cache: true
